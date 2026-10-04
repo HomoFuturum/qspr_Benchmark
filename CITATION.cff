@@ -3,7 +3,7 @@ message: "If you use this software, please cite it using these metadata."
 title: "qspr_bench: a reproducible benchmark for QSPR/QSAR molecular property prediction"
 type: software
 version: 0.1.0
-date-released: "2026-01-01"  # TODO: set to the release date
+date-released: "2026-10-4"
 license: MIT
 abstract: >-
   A universal, config-driven benchmark framework for molecular property prediction
@@ -11,11 +11,11 @@ abstract: >-
   nested cross-validation for unbiased model selection, subgroup analysis, classical
   and graph-neural-network baselines, and compute-efficiency vs accuracy comparison.
 authors:
-  - family-names: "TODO-FamilyName"      # TODO: replace with real author(s)
-    given-names: "TODO-GivenName"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO
-repository-code: "https://github.com/TODO-org/qspr_bench"   # TODO
-url: "https://github.com/TODO-org/qspr_bench"               # TODO
+  - family-names: "Zhang"
+    given-names: "Jiaheng"
+    orcid: "https://orcid.org/0009-0004-4336-8398"
+repository-code: "https://github.com/HomoFuturum/qspr_Benchmark"  
+url: "https://github.com/HomoFuturum/qspr_Benchmark"         
 keywords:
   - QSPR
   - QSAR
