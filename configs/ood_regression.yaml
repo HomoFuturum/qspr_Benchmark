@@ -1,0 +1,19 @@
+# Out-of-distribution regression benchmark.
+# Contrasts in-distribution (random) with two OOD regimes: nearest-neighbor distance
+# (test molecules chemically far from train) and target extrapolation (test = high
+# target range). The random-vs-OOD gap is the headline generalization result.
+run:
+  name: ood_regression
+  datasets: [ESOL, FreeSolv, Lipophilicity]
+  models: [MLR, Ridge, RF, ExtraTrees, GBDT, HistGBDT, XGBoost]
+  feature_sets: [Desc, "Desc+FP"]
+  splits: [random, nn_distance, extrapolation]
+  extrapolation_direction: high
+  evaluation: holdout
+  test_frac: 0.2
+  cv_folds: 5
+  seeds: [42]
+  fp_bits: 1024
+  random_state: 42
+  save_predictions: true
+  output_dir: results/ood_regression

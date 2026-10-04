@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qspr_bench"
+version = "0.1.0"
+description = "Universal config-driven benchmark for QSPR/QSAR molecular property prediction (regression + classification)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "TODO: author name", email = "todo@example.com"},
+]
+keywords = [
+    "QSPR", "QSAR", "cheminformatics", "molecular property prediction",
+    "benchmark", "machine learning", "scaffold split", "nested cross-validation",
+    "applicability domain", "out-of-distribution",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# numpy<2: rdkit/pandas in the tested env are compiled against numpy 1.x.
+dependencies = [
+    "numpy<2",
+    "pandas",
+    "scikit-learn",
+    "xgboost",
+    "rdkit",
+    "pyyaml",
+]
+
+[project.urls]
+Homepage = "https://github.com/TODO-org/qspr_bench"
+Repository = "https://github.com/TODO-org/qspr_bench"
+
+[project.optional-dependencies]
+gnn = ["torch", "torch-geometric"]
+chemprop = ["chemprop", "lightning"]
+# shap<0.46: 0.46+ requires numpy>=2, which breaks the numpy<2 pin above.
+analysis = ["scikit-posthocs", "scipy", "shap<0.46", "matplotlib"]
+all = ["qspr_bench[gnn,chemprop,analysis]"]
+dev = ["pytest"]
+# Exact-version set reproducing the tested environment (see requirements-lock.txt).
+repro = [
+    "numpy==1.26.4",
+    "pandas==2.2.2",
+    "scikit-learn==1.4.2",
+    "xgboost==3.4.1",
+    "rdkit==2026.3.5",
+    "pyyaml==6.0.1",
+    "scipy==1.13.1",
+    "scikit-posthocs==0.16.1",
+    "shap==0.45.1",
+    "matplotlib==3.8.4",
+    "torch==2.13.0",
+    "torch-geometric==2.8.0.post1",
+    "chemprop==2.3.1",
+    "lightning==2.6.5",
+    "pytest==7.4.4",
+]
+
+[project.scripts]
+qspr-bench = "qspr_bench.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["qspr_bench*"]

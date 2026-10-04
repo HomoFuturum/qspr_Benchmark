@@ -1,0 +1,18 @@
+# Compute-efficiency vs accuracy regression benchmark.
+# measure_cost records tuning/refit/inference time + peak memory per model so the
+# accuracy-vs-cost Pareto frontier can be computed with `qspr-bench analyze efficiency`.
+# (KNN is omitted: it hits a threadpoolctl environment bug on this platform.)
+run:
+  name: efficiency_regression
+  datasets: [ESOL, FreeSolv, Lipophilicity]
+  models: [MLR, Ridge, ElasticNet, RF, ExtraTrees, GBDT, HistGBDT, XGBoost]
+  feature_sets: [Desc]
+  splits: [random]
+  evaluation: holdout
+  measure_cost: true
+  test_frac: 0.2
+  cv_folds: 5
+  seeds: [42]
+  fp_bits: 1024
+  random_state: 42
+  output_dir: results/efficiency_regression

@@ -1,0 +1,17 @@
+# Nested cross-validation regression benchmark (unbiased protocol).
+# Outer K-fold generalization estimate with proper model-selection/evaluation
+# separation; writes per-molecule OOF predictions for subgroup analysis.
+run:
+  name: nested_cv_regression
+  datasets: [ESOL, FreeSolv, Lipophilicity]
+  models: [MLR, Ridge, LASSO, KNN, SVR, MLP, RF, GBDT, XGBoost]
+  feature_sets: [Desc, "Desc+FP"]
+  splits: [random, scaffold]
+  evaluation: nested_cv
+  outer_folds: 5
+  cv_folds: 5
+  seeds: [42]
+  fp_bits: 1024
+  random_state: 42
+  save_predictions: true
+  output_dir: results/nested_cv_regression

@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "qspr_bench: a reproducible benchmark for QSPR/QSAR molecular property prediction"
+type: software
+version: 0.1.0
+date-released: "2026-01-01"  # TODO: set to the release date
+license: MIT
+abstract: >-
+  A universal, config-driven benchmark framework for molecular property prediction
+  (regression and classification) with scaffold and out-of-distribution splits,
+  nested cross-validation for unbiased model selection, subgroup analysis, classical
+  and graph-neural-network baselines, and compute-efficiency vs accuracy comparison.
+authors:
+  - family-names: "TODO-FamilyName"      # TODO: replace with real author(s)
+    given-names: "TODO-GivenName"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO
+repository-code: "https://github.com/TODO-org/qspr_bench"   # TODO
+url: "https://github.com/TODO-org/qspr_bench"               # TODO
+keywords:
+  - QSPR
+  - QSAR
+  - cheminformatics
+  - molecular property prediction
+  - benchmark
+  - nested cross-validation
+  - out-of-distribution
+  - applicability domain

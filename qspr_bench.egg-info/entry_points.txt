@@ -1,0 +1,2 @@
+[console_scripts]
+qspr-bench = qspr_bench.cli:main

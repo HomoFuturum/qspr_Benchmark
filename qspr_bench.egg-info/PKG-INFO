@@ -1,0 +1,309 @@
+Metadata-Version: 2.4
+Name: qspr_bench
+Version: 0.1.0
+Summary: Universal config-driven benchmark for QSPR/QSAR molecular property prediction (regression + classification)
+Author-email: "TODO: author name" <todo@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/TODO-org/qspr_bench
+Project-URL: Repository, https://github.com/TODO-org/qspr_bench
+Keywords: QSPR,QSAR,cheminformatics,molecular property prediction,benchmark,machine learning,scaffold split,nested cross-validation,applicability domain,out-of-distribution
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy<2
+Requires-Dist: pandas
+Requires-Dist: scikit-learn
+Requires-Dist: xgboost
+Requires-Dist: rdkit
+Requires-Dist: pyyaml
+Provides-Extra: gnn
+Requires-Dist: torch; extra == "gnn"
+Requires-Dist: torch-geometric; extra == "gnn"
+Provides-Extra: chemprop
+Requires-Dist: chemprop; extra == "chemprop"
+Requires-Dist: lightning; extra == "chemprop"
+Provides-Extra: analysis
+Requires-Dist: scikit-posthocs; extra == "analysis"
+Requires-Dist: scipy; extra == "analysis"
+Requires-Dist: shap<0.46; extra == "analysis"
+Requires-Dist: matplotlib; extra == "analysis"
+Provides-Extra: all
+Requires-Dist: qspr_bench[analysis,chemprop,gnn]; extra == "all"
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Provides-Extra: repro
+Requires-Dist: numpy==1.26.4; extra == "repro"
+Requires-Dist: pandas==2.2.2; extra == "repro"
+Requires-Dist: scikit-learn==1.4.2; extra == "repro"
+Requires-Dist: xgboost==3.4.1; extra == "repro"
+Requires-Dist: rdkit==2026.3.5; extra == "repro"
+Requires-Dist: pyyaml==6.0.1; extra == "repro"
+Requires-Dist: scipy==1.13.1; extra == "repro"
+Requires-Dist: scikit-posthocs==0.16.1; extra == "repro"
+Requires-Dist: shap==0.45.1; extra == "repro"
+Requires-Dist: matplotlib==3.8.4; extra == "repro"
+Requires-Dist: torch==2.13.0; extra == "repro"
+Requires-Dist: torch-geometric==2.8.0.post1; extra == "repro"
+Requires-Dist: chemprop==2.3.1; extra == "repro"
+Requires-Dist: lightning==2.6.5; extra == "repro"
+Requires-Dist: pytest==7.4.4; extra == "repro"
+Dynamic: license-file
+
+# qspr_bench
+
+A universal, config-driven benchmark for QSPR/QSAR molecular property prediction.
+Point it at any CSV with a SMILES column and a numeric target, pick models, feature
+sets, and splits in a YAML config, and it runs the full grid and writes long-format
+results. Supports both regression and binary classification.
+
+## Install
+
+```bash
+py -3.12 -m pip install -e .
+```
+
+Core dependencies: numpy, pandas, scikit-learn, xgboost, rdkit, pyyaml.
+
+Optional extras (lazy-imported; install only if needed):
+
+```bash
+pip install -e ".[gnn]"       # torch + torch-geometric (GIN/MPNN baselines)
+pip install -e ".[chemprop]"  # chemprop + lightning (D-MPNN baseline)
+pip install -e ".[analysis]"  # shap, matplotlib, scipy, scikit-posthocs
+pip install -e ".[dev]"       # pytest
+```
+
+## Quick start
+
+```bash
+# inspect what's available
+qspr-bench list-datasets
+qspr-bench list-models --task regression
+
+# fast smoke run: one dataset, two models, one split
+qspr-bench run configs/regression_default.yaml \
+  --dataset ESOL --models RF,XGBoost --splits random --features Desc \
+  --output-dir results/smoke_reg
+
+# full three-dataset regression benchmark
+qspr-bench run configs/regression_default.yaml
+```
+
+Results land in `<output_dir>/results.csv` (one row per
+dataset x split x feature_set x model x seed) and `<output_dir>/dataset_meta.csv`.
+
+## Configuration
+
+Two config kinds:
+
+- `configs/datasets.yaml` — the dataset registry. Each entry gives `file`,
+  `smiles_col`, `target_col`, and `task` (`regression` or `classification`).
+- A run config (e.g. `configs/regression_default.yaml`) names datasets, models,
+  `feature_sets` (`Desc`, `Desc+FP`, `FP`), `splits` (`random`, `scaffold`),
+  `cv_folds`, `seeds`, `test_frac`, `fp_bits`, and `output_dir`.
+
+A single run must be all-regression or all-classification (keeps one results file
+homogeneous). CLI flags (`--dataset`, `--models`, `--splits`, `--features`,
+`--seeds`, `--output-dir`) override the config file.
+
+## Classification datasets
+
+Classification datasets are not shipped in the repo. Download them first:
+
+```bash
+qspr-bench fetch BBBP BACE
+qspr-bench run configs/classification_default.yaml
+```
+
+Classification metrics: ROC-AUC, PR-AUC, accuracy, F1. Regression metrics: R2, RMSE, MAE.
+
+## Package layout
+
+```
+qspr_bench/
+  task.py       Task abstraction (regression vs classification seam)
+  features.py   RDKit descriptors + Morgan fingerprints + metrics
+  data.py       generalized dataset loader
+  models.py     model registry + hyperparameter grids (task-aware)
+  splits.py     variance prep, Bemis-Murcko scaffold splits, random split
+  config.py     config loading + validation
+  engine.py     the benchmark loop
+  cli.py        command-line interface
+  fetch.py      opt-in classification dataset downloader
+  baselines/    optional GNN / Chemprop models (lazy heavy deps)
+  analysis/     optional post-hoc analyses (significance, conformal, SHAP)
+```
+
+## Assessing new models
+
+Models live in a pluggable registry (`qspr_bench/registry.py`). The built-in
+sklearn/xgboost models (regression: MLR, Ridge, LASSO, ElasticNet, KNN, SVR, MLP, RF,
+ExtraTrees, GBDT, HistGBDT, XGBoost; classification: LogReg, KNN, SVC, MLP, RF,
+ExtraTrees, GBDT, HistGBDT, XGBoost) register themselves at import. To benchmark your own
+model, register it before calling the CLI/engine — no core files need editing.
+
+Tabular model (scikit-learn-compatible estimator, evaluated via GridSearchCV):
+
+```python
+from qspr_bench import registry
+from sklearn.linear_model import HuberRegressor
+
+registry.register_tabular(
+    "Huber", ["regression"],
+    builder=lambda task: (HuberRegressor(), {"epsilon": [1.2, 1.5]}),
+)
+```
+
+Graph/custom model (consumes SMILES, runs its own training loop):
+
+```python
+registry.register_graph(
+    "MyGNN", ["regression", "classification"],
+    trainer=my_trainer,   # (smiles, y, tr_idx, te_idx, task, seed, **kw) -> dict
+)
+# trainer returns {"y_pred": ..., "y_score": ... (clf only), "info": {...}}
+```
+
+Once registered, the model name is usable in any config or `--models` flag and its
+results land in the same `results.csv`. See `qspr_bench/baselines/gnn.py` for a full
+graph-model example.
+
+## Deep-learning baselines
+
+Three graph baselines ship in `qspr_bench/baselines/` and self-register on import:
+
+- `GIN`, `MPNN` (PyTorch Geometric) — install `qspr_bench[gnn]`
+- `ChempropDMPNN` (Chemprop D-MPNN) — install `qspr_bench[chemprop]`
+
+All three support regression and binary classification. Example:
+
+```bash
+qspr-bench run configs/regression_default.yaml --dataset FreeSolv \
+  --models RF,GIN,ChempropDMPNN --splits random --features Desc
+```
+
+Graph models ignore `feature_sets` (they build their own molecular graphs) and run
+once per split/seed, labeled `feature_set=graph` in the output.
+
+## Evaluation modes (bias reduction)
+
+Two evaluation protocols, set via `evaluation` in the run config (or `--evaluation`):
+
+- `holdout` (default) — a single train/test split per seed; inner GridSearchCV tunes on
+  train, metrics reported on the held-out test set. Fast; higher variance.
+- `nested_cv` — outer K-fold cross-validation (`outer_folds`, default 5) with an
+  independent inner GridSearchCV per outer fold. This separates model selection from
+  evaluation and averages over folds, giving a lower-bias, lower-variance generalization
+  estimate. Each result row reports per-fold `test_<metric>_mean`/`_std` and the pooled
+  out-of-fold `test_<metric>_pooled`.
+
+The split type composes with nested CV: `random` uses (stratified) K-fold outer folds;
+`scaffold` uses scaffold-grouped outer folds (no Bemis-Murcko scaffold crosses an outer
+train/test boundary, and the inner CV is scaffold-grouped too). OOD splits (below) are
+directional single folds, so under nested CV they report one fold (`n_outer_folds=1`).
+
+## Out-of-distribution splits
+
+Beyond interpolation-style `random`/`scaffold` splits, two OOD regimes test whether a
+model generalizes to chemistry/targets unlike its training set:
+
+- `nn_distance` — grows a training core greedily by chemical similarity; the test set is
+  the molecules with the lowest maximum Tanimoto similarity to training (chemically far).
+  Works for both tasks. The seed varies the anchor.
+- `extrapolation` — regression only. Trains on the low target range and tests on the high
+  range (`extrapolation_direction: high`) or vice versa (`low`). True extrapolation; rows
+  are labeled `extrapolation_high`/`extrapolation_low`. Deterministic (one seed suffices).
+
+```bash
+qspr-bench run configs/ood_regression.yaml --dataset FreeSolv \
+  --models RF,ExtraTrees,HistGBDT --extrapolation-direction high
+```
+
+The random-vs-OOD performance gap is the headline generalization result: e.g. FreeSolv RF
+drops from R2~0.92 (random) to ~0.65 (nn_distance) to negative (target extrapolation,
+where tree models cannot predict beyond their training range).
+
+```bash
+qspr-bench run configs/nested_cv_regression.yaml \
+  --dataset FreeSolv --models RF --splits random,scaffold --features Desc
+```
+
+Nested CV writes `predictions.csv` (one out-of-fold prediction per molecule per seed),
+which feeds subgroup analysis. `save_predictions: true` also works in holdout mode.
+
+## Subgroup analysis (disaggregated performance)
+
+Aggregate scores hide where a model fails. After a run that saved predictions:
+
+```bash
+qspr-bench analyze subgroups results/<run_name>
+```
+
+This writes `subgroups.csv` with per-subgroup metrics along three axes: scaffold
+frequency (singleton / rare / common), molecule size (heavy-atom tertiles), and target
+bin (quantile tertiles for regression, class label for classification). Note within-bin
+R2 is restricted-variance and can read low/negative; RMSE/MAE are the interpretable
+per-bin regression metrics.
+
+## Compute efficiency (cost vs accuracy)
+
+Add `--measure-cost` (or `measure_cost: true`) to record per-model compute cost alongside
+accuracy. For tabular models this captures three separate times — `search_seconds` (the
+full GridSearchCV tuning budget), `refit_seconds` (intrinsic train cost of the selected
+model, measured single-process), `predict_seconds` (inference) — plus `peak_mem_mb`
+(Python-heap peak during refit; a comparative lower bound, not absolute RSS, since native
+numpy/xgboost/torch buffers are not fully captured). Graph models report total trainer
+wall-clock as `refit_seconds` (fit and predict are not separable), with search/predict NaN.
+Under nested CV the cost columns are the mean across outer folds.
+
+```bash
+qspr-bench run configs/efficiency_regression.yaml --dataset FreeSolv \
+  --models Ridge,RF,HistGBDT,XGBoost --measure-cost
+qspr-bench analyze efficiency results/efficiency_regression
+```
+
+`analyze efficiency` writes `efficiency.csv` marking the Pareto-optimal models per
+(dataset, split, feature_set) — those not dominated on both accuracy and cost. The
+`--cost-col` flag chooses which cost drives the frontier (default `refit_seconds`). This is
+the data behind the "classical ML is competitive and far cheaper than GNNs" comparison.
+
+## Interpretability and statistics
+
+`qspr_bench/analysis/` provides (needs `qspr_bench[analysis]`):
+
+- `significance.friedman_nemenyi(results, metric)` — Friedman + Nemenyi post-hoc
+  across models over multiple seeds.
+- `conformal.conformal_intervals(spec)` — split-conformal prediction intervals
+  (regression).
+- `shap_explain.shap_ranking(spec)` — mean |SHAP| feature ranking for a GBDT
+  (regression or classification).
+
+## Reproducibility
+
+This project is designed to be reproduced end-to-end by third parties:
+
+- **Exact environment**: `requirements-lock.txt` pins every tested version (Python 3.12.4).
+  Two constraints are load-bearing and must not be relaxed: `numpy<2` (rdkit/pandas are
+  compiled against numpy 1.x) and `shap<0.46` (0.46+ requires numpy>=2).
+- **Step-by-step guide**: `REPRODUCE.md` lists the exact commands to install, run the test
+  suite, fetch data, and regenerate every results table and analysis from the configs.
+- **Data provenance**: `data/README.md` documents the source, URL, license, and columns of
+  every dataset (shipped and fetched).
+- **License**: MIT (`LICENSE`). **Citation**: `CITATION.cff` (and `.zenodo.json` for a
+  release DOI). **Version history**: `CHANGELOG.md`.
+
+```bash
+py -3.12 -m pip install -r requirements-lock.txt && py -3.12 -m pip install -e .
+py -3.12 -m pytest -q      # 35 tests confirm a working install
+```
+
+The original ESOL paper code and artifacts are archived under `used/` for reference.

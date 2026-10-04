@@ -1,0 +1,30 @@
+# Dataset registry for qspr_bench.
+# Each entry: file (relative to project root), smiles_col, target_col, task.
+# Regression datasets are present in data/. Classification datasets must be fetched
+# first with `qspr-bench fetch <NAME>` (they are not in the repo).
+datasets:
+  ESOL:
+    file: data/ESOL.csv
+    smiles_col: smiles
+    target_col: "measured log solubility in mols per litre"
+    task: regression
+  FreeSolv:
+    file: data/freesolv.csv
+    smiles_col: Drug
+    target_col: Y
+    task: regression
+  Lipophilicity:
+    file: data/lipophilicity.csv
+    smiles_col: Drug
+    target_col: Y
+    task: regression
+  BBBP:
+    file: data/bbbp.csv
+    smiles_col: smiles
+    target_col: p_np
+    task: classification
+  BACE:
+    file: data/bace.csv
+    smiles_col: mol
+    target_col: Class
+    task: classification

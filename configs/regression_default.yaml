@@ -1,0 +1,13 @@
+# Reproduces the original three-dataset regression benchmark.
+run:
+  name: regression_default
+  datasets: [ESOL, FreeSolv, Lipophilicity]
+  models: [MLR, Ridge, LASSO, KNN, SVR, MLP, RF, GBDT, XGBoost]
+  feature_sets: [Desc, "Desc+FP"]
+  splits: [random, scaffold]
+  test_frac: 0.2
+  cv_folds: 5
+  seeds: [42]
+  fp_bits: 1024
+  random_state: 42
+  output_dir: results/regression_default

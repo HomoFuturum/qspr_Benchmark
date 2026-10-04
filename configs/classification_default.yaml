@@ -1,0 +1,13 @@
+# Classification benchmark. Requires: qspr-bench fetch BBBP BACE
+run:
+  name: classification_default
+  datasets: [BBBP, BACE]
+  models: [LogReg, KNN, SVC, MLP, RF, GBDT, XGBoost]
+  feature_sets: [Desc, "Desc+FP"]
+  splits: [random, scaffold]
+  test_frac: 0.2
+  cv_folds: 5
+  seeds: [42]
+  fp_bits: 1024
+  random_state: 42
+  output_dir: results/classification_default
